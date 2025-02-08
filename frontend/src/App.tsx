@@ -1,11 +1,12 @@
-import './App.css'
+import React from 'react';
+import GlobeComponent, { MarkerData } from './components/GlobeComponent';
 
-function App() {
+const markers: MarkerData[] = [
+  { lat: 37.7749, lng: -122.4194, size: 30, pictogram: 'TODO' },
+];
 
-  return (
-    <>
-    </>
-  )
-}
+const App: React.FC = () => {
+  return <GlobeComponent markers={markers} />;
+};
 
-export default App
+export default App;
