@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Globe from 'globe.gl';
+import * as THREE from 'three';
 
 export interface MarkerData {
   lat: number;
@@ -10,15 +11,17 @@ export interface MarkerData {
 
 interface GlobeComponentProps {
   markers: MarkerData[];
+  backgroundColor?: string;
 }
 
-const GlobeComponent: React.FC<GlobeComponentProps> = ({ markers }) => {
+const GlobeComponent: React.FC<GlobeComponentProps> = ({ markers, backgroundColor }) => {
   const globeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (globeContainerRef.current) {
-      new Globe(globeContainerRef.current)
+      const globe = new Globe(globeContainerRef.current)
         .globeImageUrl('//unpkg.com/three-globe/example/img/earth-day.jpg')
+        .atmosphereColor('#ffffff')
         .htmlElementsData(markers)
         .htmlElement((d) => {
           const marker = d as MarkerData;
@@ -31,15 +34,22 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({ markers }) => {
           el.style.cursor = 'pointer';
           el.onclick = () => console.info(marker);
           el.appendChild(img);
+          img.style.backgroundColor = 'transparent';
           return el;
         });
+
+      globe.scene().background = new THREE.Color(backgroundColor);
     }
   }, [markers]);
 
   return (
     <div
       ref={globeContainerRef}
-      style={{ width: '100vw', height: '100vh', margin: 0 }}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        margin: 0
+      }}
     />
   );
 };

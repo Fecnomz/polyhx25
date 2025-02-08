@@ -6,7 +6,7 @@ const markers: MarkerData[] = [
 ];
 
 const App: React.FC = () => {
-  return <GlobeComponent markers={markers} />;
+  return <GlobeComponent markers={markers} backgroundColor='#ff00ff'/>;
 };
 
 export default App;
