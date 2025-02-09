@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ globe, panelOpen, selectedMarker, close
         if (panelOpen) {
             setShowPanel(true);
         } else {
-            const timeout = setTimeout(() => setShowPanel(false), 1000);
+            const timeout = setTimeout(() => setShowPanel(false), 800);
             return () => clearTimeout(timeout);
         }
     }, [panelOpen]);
@@ -31,11 +31,12 @@ const Layout: React.FC<LayoutProps> = ({ globe, panelOpen, selectedMarker, close
             }}
             onClick={closePanel}
         >
+
             <div
                 style={{
                     width: panelOpen ? '50vw' : '100vw',
                     height: '100vh',
-                    transition: 'width 1.0s ease-in-out',
+                    transition: 'width 0.8s ease-in-out',
                     background: '#000',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -50,11 +51,14 @@ const Layout: React.FC<LayoutProps> = ({ globe, panelOpen, selectedMarker, close
                 style={{
                     width: '50vw',
                     height: '100vh',
-                    transform: panelOpen ? 'translateX(0)' : 'translateX(100%)',
-                    transition: 'transform 1.0s ease-in-out',
-                    position: 'absolute',
-                    right: 0,
+                    position: 'fixed',
+                    right: '0',
                     top: 0,
+                    transform: panelOpen ? 'translateX(0)' : 'translateX(100%)',
+                    transition: 'transform 0.8s ease-in-out',
+                    background: 'black',
+                    boxShadow: panelOpen ? '-5px 0 10px rgba(0, 0, 0, 0.2)' : 'none',
+                    pointerEvents: panelOpen ? 'auto' : 'none',
                     visibility: showPanel ? 'visible' : 'hidden',
                 }}
                 onClick={(e) => e.stopPropagation()}
