@@ -18,16 +18,19 @@ interface ClusterData {
 interface GlobeComponentProps {
   markers: MarkerData[];
   backgroundColor?: string;
+  onMarkerClick: (marker: MarkerData) => void;
 }
 
 const GlobeComponent: React.FC<GlobeComponentProps> = ({
   markers,
-  backgroundColor = '#000000'
+  backgroundColor = '#000000',
+  onMarkerClick
 }) => {
   const globeContainerRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<any>(null);
 
   useEffect(() => {
-    if (globeContainerRef.current) {
+    if (globeContainerRef.current && !globeRef.current) {
       const clusters: ClusterData[] = [];
       const threshold = 0.5;
       markers.forEach(marker => {
@@ -48,87 +51,67 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
         }
       });
 
-      const globe = new Globe(globeContainerRef.current)
+      globeRef.current = new Globe(globeContainerRef.current)
         .globeImageUrl('//unpkg.com/three-globe/example/img/earth-day.jpg')
         .atmosphereColor('#ffffff')
         .htmlElementsData(clusters)
         .htmlElement((d) => {
           const cluster = d as ClusterData;
-
-          if (cluster.markers.length === 1) {
-            const marker = cluster.markers[0];
-            const el = document.createElement('div');
-            el.style.pointerEvents = 'auto';
-            el.style.cursor = 'pointer';
-            el.onclick = () => console.info(marker);
-
-            const img = document.createElement('img');
-            img.src = marker.pictogram;
-            img.style.width = marker.size + 'px';
-            img.style.height = 'auto';
-            img.style.transition = 'transform 0.3s ease';
-
-            el.appendChild(img);
-
-            el.addEventListener('mouseenter', () => {
-              img.style.transform = 'scale(1.2)';
-            });
-            el.addEventListener('mouseleave', () => {
-              img.style.transform = 'scale(1)';
-            });
-            return el;
-          }
-
           const baseSize = cluster.markers[0].size;
 
-          const initialOffset = 10; 
-          const hoverSpacing = baseSize + 5; 
+          const initialOffset = 6;
+          const hoverSpacing = baseSize + 5;
           const liftAmount = 10;
-
-          const containerWidth = baseSize + (cluster.markers.length - 1) * initialOffset;
 
           const container = document.createElement('div');
           container.style.position = 'relative';
-          container.style.width = containerWidth + 'px';
-          container.style.height = baseSize + 'px';
+          container.style.width = `${baseSize}px`;
+          container.style.height = `${baseSize}px`;
           container.style.cursor = 'pointer';
-          container.style.transition = 'width 0.3s ease';
           container.style.pointerEvents = 'auto';
+
+          let expandTimeout: number | null = null;
+          let collapseTimeout: number | null = null;
 
           cluster.markers.forEach((marker, index) => {
             const img = document.createElement('img');
             img.src = marker.pictogram;
-            img.style.width = baseSize + 'px';
+            img.style.width = `${baseSize}px`;
             img.style.height = 'auto';
             img.style.position = 'absolute';
             img.style.top = '0';
-            img.style.transform = `translate(${index * initialOffset}px, 0px)`;
+            img.style.left = `${index * initialOffset}px`;
             img.style.transition = 'transform 0.3s ease';
             img.style.zIndex = `${index}`;
+            img.style.pointerEvents = 'auto';
 
             img.addEventListener('click', (e) => {
               e.stopPropagation();
               console.info(marker);
+              onMarkerClick(marker);
+
+              globeRef.current.pointOfView(
+                { lat: marker.lat, lng: marker.lng, altitude: 0.75 },
+                1500
+              );
             });
+
             container.appendChild(img);
           });
 
-          let expandTimeout: number | null = null;
-
           container.addEventListener('mouseenter', () => {
-            Array.from(container.children).forEach((child, i) => {
-              (child as HTMLElement).style.transition = 'transform 0.2s ease';
-              (child as HTMLElement).style.transform = `translate(${i * initialOffset}px, -${liftAmount}px)`;
-            });
+            if (collapseTimeout) {
+              clearTimeout(collapseTimeout);
+              collapseTimeout = null;
+            }
+
             expandTimeout = window.setTimeout(() => {
               Array.from(container.children).forEach((child, i) => {
-                (child as HTMLElement).style.transition = 'transform 0.3s ease';
+                (child as HTMLElement).style.transition = 'transform 0.2s ease-out';
                 (child as HTMLElement).style.transform = `translate(${i * hoverSpacing}px, -${liftAmount}px)`;
+                (child as HTMLElement).style.zIndex = '100';
               });
-              const newWidth = baseSize + (cluster.markers.length - 1) * hoverSpacing;
-              container.style.transition = 'width 0.3s ease';
-              container.style.width = newWidth + 'px';
-            }, 200);
+            }, 100);
           });
 
           container.addEventListener('mouseleave', () => {
@@ -136,20 +119,22 @@ const GlobeComponent: React.FC<GlobeComponentProps> = ({
               clearTimeout(expandTimeout);
               expandTimeout = null;
             }
-            Array.from(container.children).forEach((child, i) => {
-              (child as HTMLElement).style.transition = 'transform 0.3s ease';
-              (child as HTMLElement).style.transform = `translate(${i * initialOffset}px, 0px)`;
-            });
-            container.style.transition = 'width 0.3s ease';
-            container.style.width = containerWidth + 'px';
+
+            collapseTimeout = window.setTimeout(() => {
+              Array.from(container.children).forEach((child, i) => {
+                (child as HTMLElement).style.transition = 'transform 0.3s ease-in-out';
+                (child as HTMLElement).style.transform = `translate(${i * initialOffset}px, 0px)`;
+                (child as HTMLElement).style.zIndex = `${i}`;
+              });
+            }, 200);
           });
 
           return container;
         });
 
-      globe.scene().background = new THREE.Color(backgroundColor);
+      globeRef.current.scene().background = new THREE.Color(backgroundColor);
     }
-  }, [markers, backgroundColor]);
+  }, [markers, backgroundColor, onMarkerClick]);
 
   return (
     <div

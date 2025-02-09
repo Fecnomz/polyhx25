@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Layout from './components/Layout';
 import GlobeComponent, { MarkerData } from './components/GlobeComponent';
 
 const markers: MarkerData[] = [
@@ -10,14 +11,14 @@ const markers: MarkerData[] = [
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMsHt2ljgxvaDbA9OXpW_B5Y9Oz0DyJZAiwg&s'
   },
   {
-    lat: 37.7750, // very close to the first marker
+    lat: 37.7750,
     lng: -122.4195,
     size: 45,
     pictogram:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMsHt2ljgxvaDbA9OXpW_B5Y9Oz0DyJZAiwg&s'
   }, 
   {
-    lat: 37.7750, // very close to the first marker
+    lat: 37.7750,
     lng: -122.4195,
     size: 45,
     pictogram:
@@ -26,7 +27,22 @@ const markers: MarkerData[] = [
 ];
 
 const App: React.FC = () => {
-  return <GlobeComponent markers={markers} backgroundColor="#ff00ff" />;
+    const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
+    const [panelOpen, setPanelOpen] = useState(false);
+
+    const openPanel = (marker: MarkerData) => {
+        setSelectedMarker(marker);
+        setPanelOpen(true);
+    };
+
+    return (
+        <Layout
+            globe={<GlobeComponent markers={markers} onMarkerClick={openPanel} />}
+            panelOpen={panelOpen}
+            selectedMarker={selectedMarker}
+            closePanel={() => setPanelOpen(false)}
+        />
+    );
 };
 
 export default App;
